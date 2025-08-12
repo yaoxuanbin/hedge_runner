@@ -1,0 +1,28 @@
+{
+    "sim_mode": true,
+    "bybit": {
+        "api_key": "TG3w2OPeVAi8TrCORC",
+        "secret_key": "0Iq2PampxMLhDhmkMBHIgG09IGaKQ7ILYfvP"
+    },
+    "okx": {
+        "api_key": "770a5580-588e-4605-a2ca-57224ccba876",
+        "secret_key": "B4734E2885D1B71136E4732B394A3C3D",
+        "passphrase": "Ww@123456"
+    },
+    "hedge": {
+        "BTC": {
+            "okx": "BTC-USDT-SWAP",
+            "bybit": "BTCUSDT",
+            "open_spread": 0.004,
+            "close_spread": 0.0,
+            "qty": 0.01
+        },
+        "DOGE": {
+            "okx": "DOGE-USDT-SWAP",
+            "bybit": "DOGEUSDT",
+            "open_spread": 0.003,
+            "close_spread": 0.0,
+            "qty": 10
+        }
+    }
+}
