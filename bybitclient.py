@@ -75,6 +75,7 @@ class BybitClient:
     def swap_trade(self, symbol, side, qty, positionIdx, category="linear"):
         """
         平仓：side为"Buy"时平空，side为"Sell"时平多，qty为平仓数量，positionIdx需对应方向
+        返回 (result, True) 成功，(None, False) 失败，与 okxclient.py 逻辑一致
         """
         orderLinkId = uuid.uuid4().hex
         result = self.session.place_order(
@@ -87,8 +88,13 @@ class BybitClient:
             orderLinkId=orderLinkId,
             positionIdx=str(positionIdx)  # 1=平多, 2=平空，必须为字符串
         )
-        print("平仓返回：", result)
-        return result
+        # print("平仓返回：", result)
+        if result.get("retCode") == 0:
+            print(f"{symbol} {side} 订单成功:", result)
+            return result, True
+        else:
+            print(f"{symbol} {side} 订单失败:", result)
+            return None, False
 
 
     def get_positions(self, symbol, category="linear"):
@@ -181,10 +187,13 @@ class BybitClient:
 
 if __name__ == "__main__":
     bybit = BybitClient()
-    bybit.set_leverage("BTCUSDT", 1, 1)
-    bybit.set_leverage("ETHUSDT", 1, 1)
-    bybit.switch_to_hedge_mode("ETHUSDT")
+    # bybit.set_leverage("BTCUSDT", 1, 1)
+    # bybit.set_leverage("ETHUSDT", 1, 1)
+    # bybit.switch_to_hedge_mode("ETHUSDT")
     # bybit.open_long("BTCUSDT", 0.001)
-    print(bybit.get_ticker(["BTCUSDT", "DOGEUSDT"]))
+    # bybit.close_long("BTCUSDT")
+    # bybit.open_short("BTCUSDT", 0.001)
+    bybit.close_short("BTCUSDT")
+    # print(bybit.get_ticker(["BTCUSDT", "DOGEUSDT"]))
 
     # bybit.get_positions("BTCUSDT")

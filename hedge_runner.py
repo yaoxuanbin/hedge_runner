@@ -40,6 +40,7 @@ class HedgeRunner:
             self.bybit.set_leverage(bybit_id, 1, 1)
 
     def init_positions(self):
+        self.open_direction = {}  # 1=正向，-1=反向，None=无持仓
         for symbol, cfg in self.hedge_cfg.items():
             okx_id = cfg["okx"]
             bybit_id = cfg["bybit"]
@@ -54,7 +55,14 @@ class HedgeRunner:
             # 只有一边多一边空才算有持仓
             has_pos = (okx_short and bybit_long) or (okx_long and bybit_short)
             self.status[symbol] = "open" if has_pos else None
-            self.logger.info(f"初始化持仓: {symbol} 持仓状态: {'对冲持仓' if has_pos else '无仓'}")
+            # 判断方向
+            if okx_short and bybit_long:
+                self.open_direction[symbol] = 1  # 正向：okx空bybit多
+            elif okx_long and bybit_short:
+                self.open_direction[symbol] = -1  # 反向：okx多bybit空
+            else:
+                self.open_direction[symbol] = None
+            self.logger.info(f"初始化持仓: {symbol} 持仓状态: {'对冲持仓' if has_pos else '无仓'}，方向: {self.open_direction[symbol]}")
 
     def monitor_symbol(self, symbol):
         cfg = self.hedge_cfg[symbol]
@@ -78,20 +86,28 @@ class HedgeRunner:
                         okx_ret = self.okx.open_short(okx_id, qty)
                         bybit_ret = self.bybit.open_long(bybit_id, qty)
                         self.status[symbol] = "open"
+                        self.open_direction[symbol] = 1  # 用实例属性记录方向
                     elif spread <= -open_spread:
                         self.logger.info(f"{symbol} 价差小于-{open_spread*100:.2f}%，okx开多，bybit开空")
                         okx_ret = self.okx.open_long(okx_id, qty)
                         bybit_ret = self.bybit.open_short(bybit_id, qty)
                         self.status[symbol] = "open"
+                        self.open_direction[symbol] = -1
                 # 平仓逻辑
                 elif pos_status == "open":
-                        if (direction == 1 and spread < close_spread) or (direction == -1 and spread > close_spread):
-                            self.logger.info(f"{symbol} 价差满足平仓条件，平仓")
-                            self.okx.close_long(okx_id)
-                            self.okx.close_short(okx_id)
-                            self.bybit.close_long(bybit_id)
-                            self.bybit.close_short(bybit_id)
-                            self.status[symbol] = None
+                    direction = self.open_direction.get(symbol)
+                    if direction == 1 and spread < close_spread:
+                        self.logger.info(f"{symbol} 正向持仓，价差回归，平仓")
+                        self.okx.close_short(okx_id)
+                        self.bybit.close_long(bybit_id)
+                        self.status[symbol] = None
+                        self.open_direction[symbol] = None
+                    elif direction == -1 and spread > close_spread:
+                        self.logger.info(f"{symbol} 反向持仓，价差回归，平仓")
+                        self.okx.close_long(okx_id)
+                        self.bybit.close_short(bybit_id)
+                        self.status[symbol] = None
+                        self.open_direction[symbol] = None
                 time.sleep(1)
             except Exception as e:
                 self.logger.error(f"{symbol} 监控异常: {e}")

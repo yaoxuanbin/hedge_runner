@@ -121,34 +121,22 @@ class OkxClient:
     def close_long(self, inst_id):
         """平掉指定SWAP合约的多头持仓"""
         positions = self.get_positions(inst_id)
-        long_pos = None
-        for pos in positions:
-            if pos.get("posSide") == "long" and float(pos.get("availPos", 0)) > 0:
-                long_pos = pos
-                break
-        if not long_pos:
+        qty = positions.get("Buy", 0.0)
+        if qty <= 0:
             print(f"[{datetime.now()}] 无多头持仓可平: {inst_id}")
             return None, False
-
-        avail_pos = float(long_pos["availPos"])
-        print(f"[{datetime.now()}] 平多仓 {inst_id} long {avail_pos} 张")
-        return self.swap_trade(inst_id=inst_id, side="sell", amount=avail_pos, price=None, posSide="long")
+        print(f"[{datetime.now()}] 平多仓 {inst_id} long {qty} 张")
+        return self.swap_trade(inst_id=inst_id, side="sell", amount=qty, price=None, posSide="long")
 
     def close_short(self, inst_id):
         """平掉指定SWAP合约的空头持仓"""
         positions = self.get_positions(inst_id)
-        short_pos = None
-        for pos in positions:
-            if pos.get("posSide") == "short" and float(pos.get("availPos", 0)) > 0:
-                short_pos = pos
-                break
-        if not short_pos:
+        qty = positions.get("Sell", 0.0)
+        if qty <= 0:
             print(f"[{datetime.now()}] 无空头持仓可平: {inst_id}")
             return None, False
-
-        avail_pos = float(short_pos["availPos"])
-        print(f"[{datetime.now()}] 平空仓 {inst_id} short {avail_pos} 张")
-        return self.swap_trade(inst_id=inst_id, side="buy", amount=avail_pos, price=None, posSide="short")
+        print(f"[{datetime.now()}] 平空仓 {inst_id} short {qty} 张")
+        return self.swap_trade(inst_id=inst_id, side="buy", amount=qty, price=None, posSide="short")
     
     def set_leverage(self, instId, lever, mgnMode, posSide=None):
         """设置杠杆"""
@@ -163,9 +151,10 @@ class OkxClient:
 
 if __name__ == "__main__":
     client = OkxClient()
-    print(client.get_ticker(['BTC-USDT-SWAP', 'DOGE-USDT-SWAP']))
-    print(client.get_positions('BTC-USDT-SWAP'))
-    # client.close_long('DOGE-USDT-SWAP')
+    # print(client.get_ticker(['BTC-USDT-SWAP', 'DOGE-USDT-SWAP']))
+    # print(client.get_positions('BTC-USDT-SWAP'))
+    client.close_short('DOGE-USDT-SWAP')
+    # client.open_short('DOGE-USDT-SWAP', 0.1)
     # 下单示例
     # print(client.swap_trade(inst_id='DOGE-USDT-SWAP', side='sell', amount='0.1', price=None, posSide="short"))
     # print(client.swap_trade(inst_id='DOGE-USDT-SWAP', side='buy', amount='0.1', price=None, posSide="long"))
