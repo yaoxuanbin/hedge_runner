@@ -151,9 +151,9 @@ class OkxClient:
 
 if __name__ == "__main__":
     client = OkxClient()
-    # print(client.get_ticker(['BTC-USDT-SWAP', 'DOGE-USDT-SWAP']))
+    print(client.get_ticker(['BTC-USDT-SWAP', 'DOGE-USDT-SWAP']))
     # print(client.get_positions('BTC-USDT-SWAP'))
-    client.close_short('DOGE-USDT-SWAP')
+    # client.close_short('DOGE-USDT-SWAP')
     # client.open_short('DOGE-USDT-SWAP', 0.1)
     # 下单示例
     # print(client.swap_trade(inst_id='DOGE-USDT-SWAP', side='sell', amount='0.1', price=None, posSide="short"))
